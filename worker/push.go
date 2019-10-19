@@ -14,6 +14,7 @@ import (
 
 	"github.com/didi/falcon-log-agent/common/proc/metric"
 
+	"github.com/didi/falcon-log-agent/strategy"
 	"github.com/parnurzeal/gorequest"
 )
 
@@ -86,6 +87,7 @@ func PusherLoop() {
 		for _, id := range gIds {
 			stCount, err := GlobalCount.GetStrategyCountByID(id)
 			step := stCount.Strategy.Interval
+			//strategy := stCount.Strategy
 
 			filePath := stCount.Strategy.FilePath
 			if err != nil {
@@ -95,6 +97,15 @@ func PusherLoop() {
 			tmsList := stCount.GetTmsList()
 			for _, tms := range tmsList {
 				if tmsNeedPush(tms, filePath, step) {
+
+					if stCount.Strategy.NeedPushMissPoint() {
+						tmss, pcs := getMissPointerCounter(tms, filePath, step, stCount.Strategy.Lazy, false)
+						for index, _ := range tmss {
+							ToPushQueue(stCount.Strategy, tmss[index], pcs[index])
+						}
+					}
+
+					strategy.UpdateStrategyPushTimeStamp(stCount.Strategy.ID, tms)
 					pointsCount, err := stCount.GetByTms(tms)
 					if err == nil {
 						ToPushQueue(stCount.Strategy, tms, pointsCount.TagstringMap)
@@ -105,8 +116,45 @@ func PusherLoop() {
 				}
 			}
 		}
+		PushMissPointerCounter()
 		time.Sleep(time.Second * time.Duration(g.Conf().Worker.PushInterval))
 	}
+}
+
+func PushMissPointerCounter() {
+	strategys := strategy.GetAll()
+	tms := time.Now().Unix()
+	for _, s := range strategys {
+		if s.NeedPushMissPoint() {
+			tmss, pcs := getMissPointerCounter(tms, s.FilePath, s.Interval, s.Lazy, true)
+			for index, _ := range tmss {
+				ToPushQueue(s, tmss[index], pcs[index])
+			}
+		}
+	}
+}
+
+// 最新的一个点不进行汇报空值，这里找到上一个周期
+func getMissPointerCounter(tms int64, filePath string, step int64, lazy int64, includeNewestValue bool) ([]int64, []map[string]*PointCounter) {
+	var pcs = make([]map[string]*PointCounter, 0)
+	var tmss = make([]int64, 0)
+	readerOldestTms, exists := GetOldestTms(filePath)
+	if !exists {
+		return tmss, pcs
+	}
+
+	if !includeNewestValue {
+		lazy += step
+	}
+
+	for tms > readerOldestTms+lazy {
+		tmpPC := make(map[string]*PointCounter)
+		tmpTms := AlignStepTms(step, readerOldestTms)
+		tmss = append(tmss, tmpTms)
+		tmpPC[""] = &PointCounter{}
+		pcs = append(pcs, tmpPC)
+	}
+	return tmss, pcs
 }
 
 func tmsNeedPush(tms int64, filePath string, step int64) bool {
@@ -124,6 +172,7 @@ func tmsNeedPush(tms int64, filePath string, step int64) bool {
 // 这个参数是为了最大限度的对接
 // pointMap的key，是打平了的tagkv
 func ToPushQueue(strategy *scheme.Strategy, tms int64, pointMap map[string]*PointCounter) error {
+	dlog.Info(pointMap)
 	for tagstring, PointCounter := range pointMap {
 		var value float64
 		switch strategy.Func {

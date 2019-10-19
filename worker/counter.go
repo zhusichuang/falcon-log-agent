@@ -16,6 +16,7 @@ import (
 
 // AnalysPoint to push to Calculate module
 // 从worker往计算部分推的Point
+// 没有点时也来汇报，可以上传0值， 当没有判断出数据时上传为0
 type AnalysPoint struct {
 	StrategyID int64
 	Value      float64
@@ -194,18 +195,16 @@ func (pc *PointsCounter) Update(tagstring string, value float64) error {
 			return fmt.Errorf("when update, cannot get pointCount after add [tagstring:%s]", tagstring)
 		}
 	}
-
-	pointCount.Lock()
-	pointCount.Count = pointCount.Count + 1
-	pointCount.Sum = pointCount.Sum + value
-	if math.IsNaN(pointCount.Max) || value > pointCount.Max {
-		pointCount.Max = value
-	}
-	if math.IsNaN(pointCount.Min) || value < pointCount.Min {
-		pointCount.Min = value
-	}
-	pointCount.Unlock()
-
+		pointCount.Lock()
+		pointCount.Count =  pointCount.Count + 1
+		pointCount.Sum = pointCount.Sum + value
+		if math.IsNaN(pointCount.Max) || value > pointCount.Max {
+			pointCount.Max = value
+		}
+		if math.IsNaN(pointCount.Min) || value < pointCount.Min {
+			pointCount.Min = value
+		}
+		pointCount.Unlock()
 	return nil
 }
 

@@ -23,6 +23,8 @@ type Strategy struct {
 	Pattern    string                    `json:"pattern"`
 	Exclude    string                    `json:"exclude"`
 	Interval   int64                     `json:"step"`
+	Lazy       int64                     `json:"lazy"`
+	PushMiss   bool                      `json:"push_miss"`
 	Tags       map[string]string         `json:"tags"`
 	Func       string                    `json:"func"`
 	Degree     int64                     `json:"degree"`
@@ -32,6 +34,10 @@ type Strategy struct {
 	ExcludeReg *regexp.Regexp            `json:"-"`
 	TagRegs    map[string]*regexp.Regexp `json:"-"`
 	ParseSucc  bool                      `json:"parse_succ"`
+}
+
+func (s Strategy) NeedPushMissPoint() bool {
+	return s.PushMiss && len(s.Tags) == 0
 }
 
 type LimitResp struct {

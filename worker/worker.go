@@ -231,7 +231,7 @@ func (w *Worker) producer(line string, strategy *scheme.Strategy) (*AnalysPoint,
 
 	//处理用户正则
 	var patternReg, excludeReg *regexp.Regexp
-	var value float64
+	var value float64 = 0
 	patternReg = strategy.PatternReg
 	if patternReg != nil {
 		v := patternReg.FindStringSubmatch(line)
@@ -247,6 +247,7 @@ func (w *Worker) producer(line string, strategy *scheme.Strategy) (*AnalysPoint,
 				value = math.NaN()
 			}
 		} else {
+
 			//外边匹配err之后，要确保返回值不是nil再推送至counter
 			//正则有表达式，没匹配到，直接返回
 			return nil, nil

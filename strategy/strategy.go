@@ -11,10 +11,16 @@ import (
 // 后续开发者切记 : 没有锁，不要修改globalStrategy，更新的时候直接替换，否则会panic
 var (
 	globalStrategy map[int64]*scheme.Strategy
+	globalStrategyPushTms  map[int64]int64
 )
 
 func init() {
 	globalStrategy = make(map[int64]*scheme.Strategy, 0)
+	globalStrategyPushTms = make(map[int64]int64, 0)
+}
+
+func UpdateStrategyPushTimeStamp(sid int64, tms int64){
+	globalStrategyPushTms[sid] = tms
 }
 
 // UpdateGlobalStrategy to update strategy
