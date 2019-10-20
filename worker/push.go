@@ -99,7 +99,7 @@ func PusherLoop() {
 				if tmsNeedPush(tms, filePath, step) {
 
 					if stCount.Strategy.NeedPushMissPoint() {
-						tmss, pcs := getMissPointerCounter(tms, filePath, step, stCount.Strategy.Lazy, false)
+						tmss, pcs := getMissPointerCounter(tms, stCount.Strategy.ID, step, stCount.Strategy.Lazy, false)
 						for index, _ := range tmss {
 							ToPushQueue(stCount.Strategy, tmss[index], pcs[index])
 						}
@@ -126,7 +126,7 @@ func PushMissPointerCounter() {
 	tms := time.Now().Unix()
 	for _, s := range strategys {
 		if s.NeedPushMissPoint() {
-			tmss, pcs := getMissPointerCounter(tms, s.FilePath, s.Interval, s.Lazy, true)
+			tmss, pcs := getMissPointerCounter(tms, s.ID, s.Interval, s.Lazy, true)
 			for index, _ := range tmss {
 				ToPushQueue(s, tmss[index], pcs[index])
 			}
@@ -135,21 +135,23 @@ func PushMissPointerCounter() {
 }
 
 // 最新的一个点不进行汇报空值，这里找到上一个周期
-func getMissPointerCounter(tms int64, filePath string, step int64, lazy int64, includeNewestValue bool) ([]int64, []map[string]*PointCounter) {
+func getMissPointerCounter(tms int64, sid int64, step int64, lazy int64, includeNewestValue bool) ([]int64, []map[string]*PointCounter) {
 	var pcs = make([]map[string]*PointCounter, 0)
 	var tmss = make([]int64, 0)
-	readerOldestTms, exists := GetOldestTms(filePath)
+	lastPushTms, exists := strategy.GetStrategyLastPushTimeStamp(sid)
 	if !exists {
 		return tmss, pcs
 	}
 
+	lazy = lazy + step
 	if !includeNewestValue {
-		lazy += step
+		lazy = step * 2
 	}
 
-	for tms > readerOldestTms+lazy {
+	for tms > lastPushTms+lazy {
 		tmpPC := make(map[string]*PointCounter)
-		tmpTms := AlignStepTms(step, readerOldestTms)
+		tmpTms := AlignStepTms(step, lastPushTms) + step
+
 		tmss = append(tmss, tmpTms)
 		tmpPC[""] = &PointCounter{}
 		pcs = append(pcs, tmpPC)

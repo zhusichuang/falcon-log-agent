@@ -23,6 +23,13 @@ func UpdateStrategyPushTimeStamp(sid int64, tms int64){
 	globalStrategyPushTms[sid] = tms
 }
 
+func GetStrategyLastPushTimeStamp(sid int64) (int64, bool){
+	if a, ok := globalStrategyPushTms[sid]; ok{
+		return a, ok
+	}
+	return 0, false
+}
+
 // UpdateGlobalStrategy to update strategy
 func UpdateGlobalStrategy(sts []*scheme.Strategy) error {
 	tmpStrategyMap := make(map[int64]*scheme.Strategy, 0)
