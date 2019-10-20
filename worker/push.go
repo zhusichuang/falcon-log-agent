@@ -144,6 +144,7 @@ func getMissPointerCounter(tms int64, sid int64, step int64, lazy int64, include
 		tmpPC := make(map[string]*PointCounter)
 		tms = AlignStepTms(step, tms-step)
 		tmss = append(tmss, tms)
+		tmpPC[""] = &PointCounter{}
 		pcs = append(pcs, tmpPC)
 		return tmss, pcs
 	}
