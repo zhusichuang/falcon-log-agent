@@ -1,11 +1,11 @@
 package strategy
 
 import (
-	"fmt"
+"fmt"
 
-	"github.com/didi/falcon-log-agent/common/g"
-	"github.com/didi/falcon-log-agent/common/scheme"
-	"github.com/didi/falcon-log-agent/common/utils"
+"github.com/didi/falcon-log-agent/common/g"
+"github.com/didi/falcon-log-agent/common/scheme"
+"github.com/didi/falcon-log-agent/common/utils"
 )
 
 // 后续开发者切记 : 没有锁，不要修改globalStrategy，更新的时候直接替换，否则会panic

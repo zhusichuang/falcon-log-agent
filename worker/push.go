@@ -139,7 +139,12 @@ func getMissPointerCounter(tms int64, sid int64, step int64, lazy int64, include
 	var pcs = make([]map[string]*PointCounter, 0)
 	var tmss = make([]int64, 0)
 	lastPushTms, exists := strategy.GetStrategyLastPushTimeStamp(sid)
+	//如果不存在就先汇报上一个点为空值
 	if !exists {
+		tmpPC := make(map[string]*PointCounter)
+		tms = AlignStepTms(step, tms-step)
+		tmss = append(tmss, tms)
+		pcs = append(pcs, tmpPC)
 		return tmss, pcs
 	}
 
