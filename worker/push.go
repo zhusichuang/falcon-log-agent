@@ -122,13 +122,14 @@ func PusherLoop() {
 }
 
 func PushMissPointerCounter() {
-	strategys := strategy.GetAll()
+	strategies := strategy.GetAll()
 	tms := time.Now().Unix()
-	for _, s := range strategys {
+	for _, s := range strategies {
 		if s.NeedPushMissPoint() {
 			tmss, pcs := getMissPointerCounter(tms, s.ID, s.Interval, s.Lazy, true)
 			for index, _ := range tmss {
 				ToPushQueue(s, tmss[index], pcs[index])
+				strategy.UpdateStrategyPushTimeStamp(s.ID, tmss[index])
 			}
 		}
 	}
@@ -157,7 +158,7 @@ func getMissPointerCounter(tms int64, sid int64, step int64, lazy int64, include
 	for tms > lastPushTms+lazy {
 		tmpPC := make(map[string]*PointCounter)
 		tmpTms := AlignStepTms(step, lastPushTms) + step
-
+		lastPushTms = tmpTms
 		tmss = append(tmss, tmpTms)
 		tmpPC[""] = &PointCounter{}
 		pcs = append(pcs, tmpPC)
