@@ -155,7 +155,7 @@ func getMissPointerCounter(tms int64, sid int64, step int64, lazy int64, include
 		lazy = step * 2
 	}
 
-	for tms > lastPushTms+lazy {
+	for tms >= lastPushTms+lazy {
 		tmpPC := make(map[string]*PointCounter)
 		tmpTms := AlignStepTms(step, lastPushTms) + step
 		lastPushTms = tmpTms
